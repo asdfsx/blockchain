@@ -1,4 +1,4 @@
 .idea
 *.db
+*.dat
 blockchain
-vendor
