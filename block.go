@@ -2,13 +2,12 @@ package main
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/gob"
 	"log"
 	"time"
 )
 
-// Block keeps block headers
+// Block represents a block in the blockchain
 type Block struct {
 	Timestamp     int64
 	Transactions  []*Transaction
@@ -34,6 +33,18 @@ func NewGenesisBlock(coinbase *Transaction) *Block {
 	return NewBlock([]*Transaction{coinbase}, []byte{})
 }
 
+// HashTransactions returns a hash of the transactions in the block
+func (b *Block) HashTransactions() []byte {
+	var transactions [][]byte
+
+	for _, tx := range b.Transactions {
+		transactions = append(transactions, tx.Serialize())
+	}
+	mTree := NewMerkleTree(transactions)
+
+	return mTree.RootNode.Data
+}
+
 // Serialize serializes the block
 func (b *Block) Serialize() []byte {
 	var result bytes.Buffer
@@ -45,19 +56,6 @@ func (b *Block) Serialize() []byte {
 	}
 
 	return result.Bytes()
-}
-
-// HashTransactions returns a hash of the transactions in the block
-func (b *Block) HashTransactions() []byte {
-	var txHashes [][]byte
-	var txHash [32]byte
-
-	for _, tx := range b.Transactions {
-		txHashes = append(txHashes, tx.ID)
-	}
-	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
-
-	return txHash[:]
 }
 
 // DeserializeBlock deserializes a block
